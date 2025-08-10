@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Widget SPA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #1e40af;
+            --accent: #f59e0b;
+            --text: #0f172a;
+            --bg: #f8fafc;
+        }
+        
+        .weather-icon {
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            transition: all 0.3s ease;
+        }
+        
+        .weather-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 640px) {
+            .forecast-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-blue-50 to-blue-100 font-sans text-gray-900">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-[var(--secondary)] mb-2">Weather Forecast</h1>
+            <p class="text-lg text-gray-600">Get real-time weather updates for any location</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-xl p-6 mb-8">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+                <div class="relative w-full md:w-auto">
+                    <input type="text" id="location-input" placeholder="Search city..." 
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent">
+                    <button id="search-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-[var(--primary)]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex items-center">
+                    <span class="mr-2 font-medium">Units:</span>
+                    <button id="unit-toggle" class="flex items-center h-8 bg-gray-200 rounded-full px-4 text-sm font-medium transition-colors duration-300 ease-in-out hover:bg-gray-300">
+                        <span id="unit-label">°C</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Current Weather -->
+            <div class="flex flex-col lg:flex-row gap-8 mb-8">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white flex-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h2 id="current-city" class="text-2xl font-bold mb-1">San Francisco</h2>
+                            <p id="current-date" class="text-blue-100 mb-4">Tuesday, June 14</p>
+                            <div class="flex items-center">
+                                <div class="mr-4">
+                                    <h3 id="current-temp" class="text-5xl font-bold">22°</h3>
+                                </div>
+                                <div>
+                                    <p id="current-desc" class="text-lg font-medium mb-1">Sunny</p>
+                                    <p class="text-blue-100 flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span id="current-location">San Francisco, CA</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <img id="current-weather-icon" src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/ed068701-bc83-4ed2-ba36-6273324a870d.png" alt="Large sunny weather icon with bright yellow sun and few white clouds on blue background" class="weather-icon w-24 h-24 md:w-32 md:h-32">
+                    </div>
+                    <div class="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="bg-blue-400/20 p-3 rounded-lg backdrop-blur-sm">
+                            <p class="text-sm text-blue-100 mb-1">Humidity</p>
+                            <p id="current-humidity" class="text-xl font-bold">65%</p>
+                        </div>
+                        <div class="bg-blue-400/20 p-3 rounded-lg backdrop-blur-sm">
+                            <p class="text-sm text-blue-100 mb-1">Wind</p>
+                            <p id="current-wind" class="text-xl font-bold">12 km/h</p>
+                        </div>
+                        <div class="bg-blue-400/20 p-3 rounded-lg backdrop-blur-sm">
+                            <p class="text-sm text-blue-100 mb-1">Pressure</p>
+                            <p id="current-pressure" class="text-xl font-bold">1012 hPa</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-2xl p-6 flex-1">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4">Today's Highlights</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                            <p class="text-sm text-gray-500 mb-2">Sunrise & Sunset</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    <span id="sunrise-time" class="font-medium">06:45 AM</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                    </svg>
+                                    <span id="sunset-time" class="font-medium">07:30 PM</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                            <p class="text-sm text-gray-500 mb-2">UV Index</p>
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <span id="uv-index" class="font-medium">5 - Moderate</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                            <p class="text-sm text-gray-500 mb-2">Visibility</p>
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <span id="visibility" class="font-medium">16 km</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                            <p class="text-sm text-gray-500 mb-2">Feels Like</p>
+                            <div class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span id="feels-like" class="font-medium">24°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5-Day Forecast -->
+            <div class="mb-6">
+                <h3 class="text-xl font-bold text-gray-700 mb-4">5-Day Forecast</h3>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 forecast-container">
+                    <!-- Forecast Day 1 -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Tomorrow</p>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/edb3953e-4ab3-42bf-93c3-fea85cb8d0c6.png" alt="Partly cloudy weather icon with sun and clouds" class="weather-icon w-12 h-12 mx-auto mb-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">24°</span>
+                            <span class="text-gray-500">16°</span>
+                        </div>
+                    </div>
+                    <!-- Forecast Day 2 -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Wed</p>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/7dac3539-4631-409a-bb09-7c5e03d19554.png" alt="Sunny weather icon with bright sun" class="weather-icon w-12 h-12 mx-auto mb-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">28°</span>
+                            <span class="text-gray-500">18°</span>
+                        </div>
+                    </div>
+                    <!-- Forecast Day 3 -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Thu</p>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c4f8be56-fc3c-4408-babb-6bc8dcd0119b.png" alt="Cloudy weather icon with scattered clouds" class="weather-icon w-12 h-12 mx-auto mb-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">20°</span>
+                            <span class="text-gray-500">14°</span>
+                        </div>
+                    </div>
+                    <!-- Forecast Day 4 -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Fri</p>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4bc949a2-d526-49e5-a0ce-c476141b4ab9.png" alt="Rainy weather icon with cloud and raindrops" class="weather-icon w-12 h-12 mx-auto mb-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">18°</span>
+                            <span class="text-gray-500">12°</span>
+                        </div>
+                    </div>
+                    <!-- Forecast Day 5 -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm weather-card">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Sat</p>
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/498bf613-9893-4bd6-834c-66472b886244.png" alt="Thunderstorm weather icon with lightning bolt" class="weather-icon w-12 h-12 mx-auto mb-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-bold">16°</span>
+                            <span class="text-gray-500">10°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center text-gray-500 text-sm">
+            <p>© 2024 Shahen. Data provided by mock weather API • Updated just now</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const searchBtn = document.getElementById('search-btn');
+            const locationInput = document.getElementById('location-input');
+            const unitToggle = document.getElementById('unit-toggle');
+            const unitLabel = document.getElementById('unit-label');
+            
+            // Current weather elements
+            const currentCity = document.getElementById('current-city');
+            const currentDate = document.getElementById('current-date');
+            const currentTemp = document.getElementById('current-temp');
+            const currentDesc = document.getElementById('current-desc');
+            const currentLocation = document.getElementById('current-location');
+            const currentIcon = document.getElementById('current-weather-icon');
+            const currentHumidity = document.getElementById('current-humidity');
+            const currentWind = document.getElementById('current-wind');
+            const currentPressure = document.getElementById('current-pressure');
+            const sunriseTime = document.getElementById('sunrise-time');
+            const sunsetTime = document.getElementById('sunset-time');
+            const uvIndex = document.getElementById('uv-index');
+            const visibility = document.getElementById('visibility');
+            const feelsLike = document.getElementById('feels-like');
+            
+            // Mock data
+            const mockWeatherData = {
+                location: 'San Francisco, CA',
+                current: {
+                    temp: 22,
+                    description: 'Sunny',
+                    icon: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/54b915d5-6c3f-41b8-b80c-ab4682b2d3fe.png',
+                    humidity: 65,
+                    wind: 12,
+                    pressure: 1012,
+                    feels_like: 24,
+                    uv_index: '5 - Moderate',
+                    visibility: 16,
+                    sunrise: '06:45 AM',
+                    sunset: '07:30 PM'
+                },
+                forecast: [
+                    { day: 'Tomorrow', icon: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/de550eef-8958-4622-8b60-bf36d68b47a0.png', temp_high: 24, temp_low: 16, description: 'Partly cloudy' },
+                    { day: 'Wed', icon: 'https://placehold.co/60x60', temp_high: 28, temp_low: 18, description: 'Sunny' },
+                    { day: 'Thu', icon: 'https://placehold.co/60x60', temp_high: 20, temp_low: 14, description: 'Cloudy' },
+                    { day: 'Fri', icon: 'https://placehold.co/60x60', temp_high: 18, temp_low: 12, description: 'Rainy' },
+                    { day: 'Sat', icon: 'https://placehold.co/60x60', temp_high: 16, temp_low: 10, description: 'Thunderstorm' }
+                ]
+            };
+            
+            // Format today's date
+            function formatDate(date) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+            
+            // Initialize app with default data
+            function initApp() {
+                const today = new Date();
+                currentDate.textContent = formatDate(today);
+                
+                currentCity.textContent = mockWeatherData.location.split(',')[0].trim();
+                currentLocation.textContent = mockWeatherData.location;
+                currentTemp.textContent = `${mockWeatherData.current.temp}°`;
+                currentDesc.textContent = mockWeatherData.current.description;
+                currentIcon.src = mockWeatherData.current.icon;
+                currentHumidity.textContent = `${mockWeatherData.current.humidity}%`;
+                currentWind.textContent = `${mockWeatherData.current.wind} km/h`;
+                currentPressure.textContent = `${mockWeatherData.current.pressure} hPa`;
+                sunriseTime.textContent = mockWeatherData.current.sunrise;
+                sunsetTime.textContent = mockWeatherData.current.sunset;
+                uvIndex.textContent = mockWeatherData.current.uv_index;
+                visibility.textContent = `${mockWeatherData.current.visibility} km`;
+                feelsLike.textContent = `${mockWeatherData.current.feels_like}°`;
+                
+                // Populate forecast
+                const forecastCards = document.querySelectorAll('.forecast-container > div');
+                mockWeatherData.forecast.forEach((day, index) => {
+                    if (forecastCards[index]) {
+                        forecastCards[index].querySelector('p').textContent = day.day;
+                        forecastCards[index].querySelector('img').src = day.icon;
+                        forecastCards[index].querySelector('img').alt = `${day.description} weather icon`;
+                        forecastCards[index].querySelector('.text-lg').textContent = `${day.temp_high}°`;
+                        forecastCards[index].querySelector('.text-gray-500').textContent = `${day.temp_low}°`;
+                    }
+                });
+            }
+            
+            // Toggle temperature unit
+            function toggleTemperatureUnit() {
+                const isCelsius = unitLabel.textContent === '°C';
+                unitLabel.textContent = isCelsius ? '°F' : '°C';
+                
+                // Convert temperatures (mock conversion - in real app would fetch new data)
+                const currentTempValue = parseInt(mockWeatherData.current.temp);
+                currentTemp.textContent = isCelsius ? `${Math.round(currentTempValue * 9/5 + 32)}°` : `${currentTempValue}°`;
+                
+                const feelsLikeValue = parseInt(mockWeatherData.current.feels_like);
+                feelsLike.textContent = isCelsius ? `${Math.round(feelsLikeValue * 9/5 + 32)}°` : `${feelsLikeValue}°`;
+                
+                // Convert forecast temps
+                const forecastCards = document.querySelectorAll('.forecast-container > div');
+                mockWeatherData.forecast.forEach((day, index) => {
+                    if (forecastCards[index]) {
+                        const highTemp = parseInt(day.temp_high);
+                        const lowTemp = parseInt(day.temp_low);
+                        
+                        if (isCelsius) {
+                            forecastCards[index].querySelector('.text-lg').textContent = `${Math.round(highTemp * 9/5 + 32)}°`;
+                            forecastCards[index].querySelector('.text-gray-500').textContent = `${Math.round(lowTemp * 9/5 + 32)}°`;
+                        } else {
+                            forecastCards[index].querySelector('.text-lg').textContent = `${highTemp}°`;
+                            forecastCards[index].querySelector('.text-gray-500').textContent = `${lowTemp}°`;
+                        }
+                    }
+                });
+            }
+            
+            // Handle search
+            function handleSearch() {
+                const location = locationInput.value.trim();
+                if (location) {
+                    // In a real app, this would make an API call
+                    mockWeatherData.location = location;
+                    currentCity.textContent = location.split(',')[0].trim();
+                    currentLocation.textContent = location;
+                    
+                    // Show loading state
+                    const temp = currentTemp.textContent;
+                    currentTemp.textContent = '...';
+                    setTimeout(() => {
+                        currentTemp.textContent = temp;
+                    }, 1000);
+                }
+            }
+            
+            // Event Listeners
+            searchBtn.addEventListener('click', handleSearch);
+            locationInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+            unitToggle.addEventListener('click', toggleTemperatureUnit);
+            
+            // Initialize
+            initApp();
+        });
+    </script>
+</body>
+</html>
+
