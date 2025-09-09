@@ -1,4 +1,4 @@
 # App-Design
-## UI/UX design of a mobile & web application
+## UI/UX design of web, game & mobile applications
 ### Project Samples:
-HTML/CSS/JAVASCRIPT & Prototypes & Layout description files 
+Layout description files, Prototypes & Developing (HTML/CSS/JAVASCRIPT) applications
